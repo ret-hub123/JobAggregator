@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Ничего не найдено{% endblock %}
+
+{% block content %}
+<div class="not-found-container">
+    <div class="not-found-content">
+        <div class="text-center">
+
+            <!-- Заголовок -->
+            <h1 class="not-found-title">Ничего не найдено</h1>
+
+            <!-- Сообщение -->
+            <p class="not-found-message">
+                К сожалению, по вашему запросу не найдено подходящих вакансий.
+            </p>
+
+
+            <div class="not-found-card">
+                <div class="card-body">
+                    <h5 class="not-found-card-title">Что можно сделать?</h5>
+                    <ul class="not-found-list">
+                        <li>Проверьте правильность написания ключевых слов</li>
+                        <li>Попробуйте использовать синонимы</li>
+                        <li>Расширьте регион поиска</li>
+                        <li>Используйте менее строгие фильтры</li>
+                    </ul>
+                </div>
+            </div>
+
+
+            <div class="not-found-buttons">
+                <a href="{% url 'search_vacantions' %}" class="btn-search-not-found">
+                   Вернуться к поиску
+                </a>
+                <a href="{% url 'main' %}" class="btn-main-not-found">
+                   На главную
+                </a>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+
+ {% block content %}
+
+    <h1> {{title}} </h1>
+
+    <div class="response-container">
+        {% for vacation in vacations %}
+        <div class="vacancy-card">
+        <div class="response-header">{{ vacation.name }}</div>
+        <div class="response-company">{{ vacation.company }}</div>
+        <div class="response-salary">{{ vacation.salary.from }} - {{ vacations.salary.to }} руб</div>
+        <div class="response-address">{{ vacation.address.city }} {{ vacations.address.street }} {{ vacations.address.building }}</div>
+        <div class="response-experience">{{ vacation.experience }}</div>
+        <div class="response-employment">{{ vacation.employment }}, {{ vacations.schedule }}</div>
+        <div class="response-published_at">{{ vacation.published_at }} </div>
+            <a class="response-url" href="https://hh.ru/vacancy/126211080">{{ vacations.url }}</a>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% endblock %}
+
+
