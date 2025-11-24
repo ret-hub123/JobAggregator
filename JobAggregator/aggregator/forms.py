@@ -4,6 +4,7 @@ from django import forms
 JOB_RECRUITER_CHOICES = [
     ("headhunter", "HeadHunter"),
     ("superjob", "SuperJob"),
+    ("rabotaru", "RabotaRU"),
 ]
 
 class SearchVacationForm(forms.Form):
@@ -13,9 +14,9 @@ class SearchVacationForm(forms.Form):
         label="Площадка для поиска вакансий"
     )
     keywords = forms.CharField(label='Наименование должности', widget=forms.TextInput(attrs={'class': 'search-form'}))
-    area = forms.IntegerField(label='Город', widget=forms.NumberInput(attrs={'class': 'search-form'}))
+    area = forms.CharField(label='Город', widget=forms.TextInput(attrs={'class': 'search-form'}))
     period = forms.IntegerField(label='Период поиска', widget=forms.NumberInput(attrs={'class': 'search-form'}))
-    page = forms.IntegerField(label='Номер страницы', widget=forms.NumberInput(attrs={'class': 'search-form'}))
+    volume = forms.IntegerField(label='Количество вакансий с ресурса', widget=forms.NumberInput(attrs={'class': 'search-form'}))
 
     class Meta:
-        fields = ['job_recruiter', 'keywords', 'area', 'period', 'page']
+        fields = ['job_recruiter', 'keywords', 'area', 'period', 'volume']

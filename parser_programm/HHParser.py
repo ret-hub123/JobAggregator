@@ -14,10 +14,10 @@ class HHParser(BaseParser):
     def parse_vacantions(self, search_params):
         params = {
             'text': search_params.get('keywords', ''),
-            'area': search_params.get('area', 1),
-            'period': search_params.get('period', 20),
-            'per_page': search_params.get('per_page', 1),
-            'page': search_params.get('page', 0)
+            'area': TOWN_CODES[search_params.get('area')],
+            'period': search_params.get('period', 30),
+            'page': search_params.get('volume', 1),
+
         }
 
         response = self.get_response('GET', self.base_url, params = params)
@@ -26,6 +26,7 @@ class HHParser(BaseParser):
             return self.detail_data_vacation(data)
         return None
 
+
     def detail_data_vacation(self, vacancy):
 
         if vacancy['items']:
@@ -33,14 +34,15 @@ class HHParser(BaseParser):
         else:
             return 'Not Found'
 
-        if vacancy['salary']: salary_info = vacancy['salary']
+        if vacancy['salary']: salary_info = f"{vacancy['salary']['from']} - {vacancy['salary']['to']}"
         else: salary_info = 'Нет информации по зарплате'
-        if vacancy['address']: address_info = vacancy['address']
+        if vacancy['address']: address_info = f"{vacancy['address']['city']}, {vacancy['address']['street']}, {vacancy['address']['building']}"
         else: address_info = 'Нет информации о адресе'
 
         dt = datetime.fromisoformat(vacancy['published_at'])
 
         self.processed_vacancy = {
+            'agregator': 'HeadHunter',
             'name': vacancy['name'],
             'company': vacancy['employer']['name'],
             'salary': salary_info,
@@ -52,7 +54,35 @@ class HHParser(BaseParser):
             'published_at': dt.strftime("%d.%m.%Y %H:%M"),
         }
 
+
+
         return self.processed_vacancy
+
+
+
+TOWN_CODES = {
+    "Москва": 1,
+    "Санкт-Петербург": 2,
+    "Новосибирск": 4,
+    "Екатеринбург": 3,
+    "Владимир": 23,
+    "Нижний Новгород": 66,
+    "Ростов-на-Дону": 76,
+    "Хабаровск": 102,
+    "Казань": 88,
+    "Челябинск": 104,
+    "Омск": 68,
+    "Самара": 78,
+    "Уфа": 99,
+    "Красноярск": 54,
+    "Пермь": 72,
+    "Воронеж": 26,
+    "Волгоград": 24,
+    "Саратов": 1596,
+    "Краснодар": 1438,
+}
+
+
 
 
 
