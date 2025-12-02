@@ -1,27 +1,44 @@
 {% extends 'base.html' %}
 
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">{{ title }}</h1>
 
- {% block content %}
-
-    <h1> {{title}} </h1>
-
-    <div class="response-container">
+    <div class="row">
         {% for vacation in vacations %}
-        <div class="vacancy-card">
-            <div class="response-header">{{ vacation.agregator }}</div>
+        <div class="col-12 col-md-6 mb-3">
+            <div class="vacancy-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge">{{ vacation.agregator }}</span>
+                </div>
 
-        <div class="response-header">{{ vacation.name }}</div>
-        <div class="response-company">{{ vacation.company }}</div>
-        <div class="response-salary">{{ vacation.salary }}</div>
-        <div class="response-address">{{ vacation.address }}</div>
-        <div class="response-experience">{{ vacation.experience }}</div>
-        <div class="response-employment">{{ vacation.employment }}, {{ vacation.schedule }}</div>
-        <div class="response-published_at">{{ vacation.published_at }} </div>
-            <a class="response-url" href="{{ vacation.url }}">{{ vacation.url }}</a>
+                <div class="response-header mb-2">{{ vacation.name }}</div>
+                <div class="response-company mb-3">{{ vacation.company }}</div>
+
+                {% if vacation.salary %}
+                <div class="response-salary mb-3">{{ vacation.salary }}</div>
+                {% endif %}
+
+                {% if vacation.address %}
+                <div class="response-address mb-3">{{ vacation.address }}</div>
+                {% endif %}
+
+                <div class="response-experience mb-3">{{ vacation.experience }}</div>
+                <div class="response-employment mb-3">{{ vacation.employment }}, {{ vacation.schedule }}</div>
+
+                <div class="response-published_at mb-3">{{ vacation.published_at }}</div>
+
+                <a class="response-url" href="{{ vacation.url }}" target="_blank">{{ vacation.url }}</a>
+            </div>
         </div>
+
+        <!-- Добавляем разрыв после каждого второго элемента для выравнивания -->
+        {% if forloop.counter|divisibleby:2 %}
+        <div class="w-100 d-none d-md-block"></div>
+        {% endif %}
         {% endfor %}
     </div>
+</div>
 
-    {% endblock %}
 
-
+{% endblock %}

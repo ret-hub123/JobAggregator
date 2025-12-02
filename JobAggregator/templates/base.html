@@ -45,6 +45,16 @@
             <button type="submit" class="btn">Login</button>
             </form>
         </li>
+
+        <li class="nav-divider">|</li>
+
+        <li class="nav-item2">
+         <form method="post" action="{% url 'registration' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn">Registration</button>
+            </form>
+        </li>
+
         {% endif %}
 
     </ul>

@@ -12,8 +12,6 @@ def get_key_access():
 
 def test_superjob_key(api_key):
 
-
-
     url = "https://api.superjob.ru/2.0/vacancies/"
     headers = {
         'X-Api-App-Id': api_key,

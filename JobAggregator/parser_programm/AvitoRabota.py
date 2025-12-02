@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import time
 import random
 import requests
-from parser_programm.BaseParser import BaseParser
+from parser_programm.Base_Parser import BaseParser
 
 
 class AvitoRabota(BaseParser):

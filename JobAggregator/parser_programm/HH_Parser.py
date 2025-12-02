@@ -1,10 +1,7 @@
 from datetime import datetime
-from http.client import HTTPResponse
 
-from django.http import HttpResponse
-from django.shortcuts import redirect
+from parser_programm.Base_Parser import BaseParser
 
-from parser_programm.BaseParser import BaseParser
 
 class HHParser(BaseParser):
     def __init__(self):
@@ -29,12 +26,18 @@ class HHParser(BaseParser):
 
     def detail_data_vacation(self, vacancy):
 
+        print(vacancy)
+
         if vacancy['items']:
             vacancy = vacancy['items'][0]
         else:
             return 'Not Found'
 
-        if vacancy['salary']: salary_info = f"{vacancy['salary']['from']} - {vacancy['salary']['to']}"
+        if vacancy['salary']:
+            if vacancy['salary']['to'] == None:
+                salary_info = f"от {vacancy['salary']['from']} рублей"
+            else:
+                salary_info = f"в среднем {(vacancy['salary']['from'] + vacancy['salary']['to']) // 2} рублей"
         else: salary_info = 'Нет информации по зарплате'
         if vacancy['address']: address_info = f"{vacancy['address']['city']}, {vacancy['address']['street']}, {vacancy['address']['building']}"
         else: address_info = 'Нет информации о адресе'
@@ -47,18 +50,50 @@ class HHParser(BaseParser):
             'company': vacancy['employer']['name'],
             'salary': salary_info,
             'address': address_info,
-            'experience': vacancy['experience']['name'],
+            'experience': f"{self.extract_experience(vacancy['experience']['name'])}, {self.extract_education(vacancy['snippet']['requirement'])}",
             'employment': vacancy['employment']['name'],
-            'schedule': vacancy['schedule']['name'],
+            'schedule': vacancy['work_schedule_by_days'][0]['name'],
             'url': vacancy['alternate_url'],
             'published_at': dt.strftime("%d.%m.%Y %H:%M"),
         }
 
-
-
         return self.processed_vacancy
 
+    def extract_education(self, requirement_text):
 
+        if not requirement_text:
+            return "Не имеет значения"
+
+        text_lower = requirement_text.lower()
+        print(text_lower)
+        if 'высшее' in text_lower:
+            return 'высшее образование'
+        elif 'среднее профессиональное' in text_lower:
+            return 'среднее профессиональное образование'
+        elif 'среднее специальное' in text_lower:
+            return 'среднее специальное образование'
+        elif 'среднее' in text_lower:
+            return 'среднее образование'
+        elif 'неполное высшее' in text_lower:
+            return 'неполное высшее образование'
+        elif 'учен' in text_lower:
+            return 'ученая степень'
+
+        return "Не имеет значения"
+
+    def extract_experience(self, requirement_text):
+
+        if not requirement_text:
+            return "Не имеет значения"
+
+        if requirement_text == "От 1 года до 3 лет":
+            return "От 1 года"
+        if requirement_text == "От 3 до 6 лет":
+            return "От 3 лет"
+        if requirement_text == "Более 6 лет":
+            return "От 6 лет"
+
+        return "Не имеет значения"
 
 TOWN_CODES = {
     "Москва": 1,

@@ -28,6 +28,7 @@
     box-sizing: border-box;
 }
 
+
 .form-container label{
     font-size: 16px;
     font-weight: bold;
@@ -78,6 +79,7 @@
     border-radius: 12px;
     padding: 24px;
     margin-bottom: 20px;
+    margin-right: 50px;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
     border: 2px solid #40e0d0;
     transition: all 0.3s ease;
@@ -354,4 +356,21 @@
     background-color: #40e0d0;
     color: white;
     border-color: #40e0d0;
+}
+
+.badge {
+    background-color: #40e0d0;
+    color: black;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+.vacancy-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.vacancy-card .response-url {
+    margin-top: auto;
 }

@@ -44,6 +44,16 @@ header > ul > li:hover {
 }
 
 
+.nav-divider{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    height: 100%;
+
+}
+
+
 
 .footer {
     background-color: black;
