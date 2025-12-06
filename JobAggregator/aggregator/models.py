@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.urls import reverse
 
 User = get_user_model()
 
@@ -45,7 +46,13 @@ class Vacation(models.Model):
         ('half_higher', 'неполное высшее'),
         ('any', 'образование любое'),
     ],
-    default='not_important')
+    default='Не имеет значения')
+
+    is_favorite = models.BooleanField(
+        default=False,
+        verbose_name='В избранном'
+    )
+
     employment = models.CharField(max_length=100, verbose_name='Тип занятости',
         choices=[
                 ('not_specified', 'Не имеет значения'),
@@ -74,3 +81,64 @@ class Vacation(models.Model):
 
     def __str__(self):
         return f"{self.name} - {self.company}"
+
+    def change_favorite(self):
+        self.is_favorite = not self.is_favorite
+        self.save()
+        return self.is_favorite
+
+
+
+
+class SearchQuery(models.Model):
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='search_queries',
+        verbose_name='Пользователь'
+    )
+
+
+    query = models.CharField(
+        max_length=255,
+        verbose_name='Поисковый запрос'
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name='Город'
+    )
+
+    platforms = models.JSONField(
+        default=list,
+        verbose_name='Выбранные платформы'
+    )
+
+    total_results = models.IntegerField(
+        default=0,
+        verbose_name='Всего найдено'
+    )
+
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Дата и время поиска'
+
+    )
+
+
+    vacancies = models.ManyToManyField(
+        Vacation,
+        related_name='search_queries',
+        blank=True,
+        verbose_name='Найденные вакансии'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Поисковый запрос'
+
+    def __str__(self):
+        return f"{self.user.username}: {self.query} ({self.created_at})"

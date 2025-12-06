@@ -36,12 +36,11 @@ class RabotaRU(BaseParser):
             'query': search_params.get('keywords', ''),
             'location': search_params.get('area'),
             'period': search_params.get('period', '30'),
-            'page': search_params.get('volume'),
         }
 
         self.town_url = f"https://{self.TOWN_PREFIXES[search_params.get('area').lower()]}.{self.search_url}"
 
-        print(self.town_url)
+
         response = self.get_response('GET', self.town_url, params=params)
 
         if response is None:
@@ -53,7 +52,6 @@ class RabotaRU(BaseParser):
 
         vacancy_cards = soup.find_all('div', class_='r-serp__item r-serp__item_vacancy')
         print(f"Найдено карточек: {len(vacancy_cards)}")
-
 
         for card in vacancy_cards:
             if len(vacancies_data) >= search_params.get('volume'):
@@ -145,13 +143,15 @@ class RabotaRU(BaseParser):
         else:
             formatted_date = "Не указана"
 
+        experience, education = experience.split(', ')
+
         self.processed_vacancy = {
             'agregator': 'Rabota.ru',
             'name': title,
             'company': company,
             'salary': salary_middle,
             'address': address,
-            'experience': self.extract_experience(experience),
+            'experience': f"{self.extract_experience(experience)}, {self.extract_education(education)}",
             'employment': 'Полная занятость' if employment == 'полный рабочий день' else 'Не имеет значения',
             'schedule': schedule,
             'url': link,
@@ -180,7 +180,7 @@ class RabotaRU(BaseParser):
 
     def parse_salary(self, salary_text):
         if not salary_text:
-            return None
+            return 'Не указана'
 
         numbers = []
         for word in salary_text.split():
@@ -196,19 +196,41 @@ class RabotaRU(BaseParser):
             return 'Не указана'
 
 
-    def extract_experience(self, requirement_text):
+    def extract_experience(self, experience):
 
-        experience, education = requirement_text.split(',')
-
-        if not requirement_text:
-            return "Не имеет значения"
+        if not experience:
+            return "Без опыта"
 
         if experience == "опыт работы от 1 года":
-            return "От 1 года" + ", " + education
+            return "От 1 года"
         if experience == "опыт работы от 3 лет":
-            return "От 3 лет" + ", " + education
+            return "От 3 лет"
+        if experience == "опыт работы от 5 лет":
+            return "От 6 лет"
         if experience == "опыт работы не имеет значения":
-            return "Нет опыта" + ", " + education
+            return "Нет опыта"
+
+        return "Без опыта"
+
+    def extract_education(self, education):
+
+        if not education:
+            return "Не имеет значения"
+
+        text_lower = education.lower()
+
+        if 'высшее' in text_lower:
+            return 'высшее образование'
+        elif 'среднее профессиональное' in text_lower:
+            return 'среднее профессиональное образование'
+        elif 'среднее специальное' in text_lower:
+            return 'среднее специальное образование'
+        elif 'среднее' in text_lower:
+            return 'среднее образование'
+        elif 'неполное высшее' in text_lower:
+            return 'неполное высшее образование'
+        elif 'учен' in text_lower:
+            return 'ученая степень'
 
         return "Не имеет значения"
 
@@ -217,7 +239,6 @@ class RabotaRU(BaseParser):
             return "Не указано"
 
         text_lower = text.lower()
-
 
         if '5/2' in text_lower or '5/2.' in text_lower or '5/2,' in text_lower:
             return '5/2'

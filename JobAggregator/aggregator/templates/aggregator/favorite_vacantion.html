@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">{{ title }}</h1>
+
+
+    {% if vacations %}
+    <div class="row">
+        {% for vacation in vacations %}
+        <div class="col-12 col-md-6 mb-3">
+            <div class="vacancy-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge">{{ vacation.aggregator }}</span>
+
+
+                    <form method="post" action="{% url 'favourites' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="vacation_id" value="{{ vacation.id }}">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-heart"></i> Удалить из избранного
+                        </button>
+                    </form>
+                </div>
+
+                <div class="response-header mb-2">{{ vacation.name }}</div>
+                <div class="response-company mb-3">{{ vacation.company }}</div>
+                <div class="response-salary mb-3">{{ vacation.salary }}</div>
+                <div class="response-address mb-3">{{ vacation.address }}</div>
+                <div class="response-experience mb-3">{{ vacation.experience }}</div>
+                <div class="response-employment mb-3">{{ vacation.employment }}, {{ vacation.schedule }}</div>
+                <div class="response-published_at mb-3">{{ vacation.published_at }}</div>
+                <a class="response-url" href="{{ vacation.url }}" target="_blank">{{ vacation.url }}</a>
+            </div>
+        </div>
+
+        {% if forloop.counter|divisibleby:2 %}
+        <div class="w-100 d-none d-md-block"></div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-heart-broken me-2"></i>
+        У вас пока нет избранных вакансий.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

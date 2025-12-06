@@ -2,43 +2,110 @@
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">{{ title }}</h1>
+    <h1 class="main-header">{{ title }}</h1>
+
+    <div class="row">
+    <div class="col-12">
+        <div class="vacancy-filter-card p-4 mb-4">
+            <form method="get" class="d-flex flex-column flex-md-row gap-3 align-items-end">
+
+                <div class="d-flex flex-wrap flex-grow-1 gap-3">
+                    <!-- Платформа -->
+                    <div class="filter-field">
+                        <label class="filter-label small text-muted mb-1 d-block">
+                            Платформа
+                        </label>
+                        <div class="filter-input-wrapper">
+                            {{ filter_form.platform }}
+                        </div>
+                    </div>
+
+                    <!-- Сортировка -->
+                    <div class="filter-field">
+                        <label class="filter-label small text-muted mb-1 d-block">
+                            Сортировка зарплаты
+                        </label>
+                        <div class="filter-input-wrapper">
+                            {{ filter_form.sort_by }}
+                        </div>
+                    </div>
+
+                    <!-- Опыт -->
+                    <div class="filter-field">
+                        <label class="filter-label small text-muted mb-1 d-block">
+                            Опыт работы
+                        </label>
+                        <div class="filter-input-wrapper">
+                            {{ filter_form.experience }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Кнопки -->
+                <div class="d-flex gap-2 mt-2 mt-md-0">
+                    <button type="submit" class="btn">
+                        <span class="btn-text">Применить фильтры</span>
+                    </button>
+                    <a href="{% url 'response_vacantions' %}" class="btn">
+                        <i class="fas fa-times me-1"></i>
+                        <span class="btn-text-resert">Сбросить фильтры</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
     <div class="row">
         {% for vacation in vacations %}
         <div class="col-12 col-md-6 mb-3">
             <div class="vacancy-card">
                 <div class="d-flex justify-content-between align-items-start mb-2">
-                    <span class="badge">{{ vacation.agregator }}</span>
+                    <span class="badge">{{ vacation.aggregator }}</span>
+
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'response_vacantions' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="vacation_id" value="{{ vacation.id }}">
+                        <button type="submit" class="btn btn-link p-0 text-decoration-none">
+                            {% if vacation.is_favorite %}
+                                <span class="text-danger">
+                                    <i class="fas fa-heart"></i> Удалить из избранного
+                                </span>
+                            {% else %}
+                                <span class="text-secondary">
+                                    <i class="far fa-heart"></i> Добавить в избранное
+                                </span>
+                            {% endif %}
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}"
+                       class="text-decoration-none text-secondary">
+                        <i class="far fa-heart"></i> Войдите, чтобы добавить
+                    </a>
+                    {% endif %}
                 </div>
 
                 <div class="response-header mb-2">{{ vacation.name }}</div>
                 <div class="response-company mb-3">{{ vacation.company }}</div>
-
-                {% if vacation.salary %}
                 <div class="response-salary mb-3">{{ vacation.salary }}</div>
-                {% endif %}
-
-                {% if vacation.address %}
                 <div class="response-address mb-3">{{ vacation.address }}</div>
-                {% endif %}
-
-                <div class="response-experience mb-3">{{ vacation.experience }}</div>
+                <div class="response-experience mb-3">{{ vacation.experience }}, {{ vacation.education }}</div>
                 <div class="response-employment mb-3">{{ vacation.employment }}, {{ vacation.schedule }}</div>
-
                 <div class="response-published_at mb-3">{{ vacation.published_at }}</div>
-
                 <a class="response-url" href="{{ vacation.url }}" target="_blank">{{ vacation.url }}</a>
             </div>
         </div>
 
-        <!-- Добавляем разрыв после каждого второго элемента для выравнивания -->
         {% if forloop.counter|divisibleby:2 %}
         <div class="w-100 d-none d-md-block"></div>
         {% endif %}
         {% endfor %}
     </div>
+
+    <a class="get-static" href="{% url 'statistics' %}">Составить статистику</a>
+
 </div>
-
-
 {% endblock %}

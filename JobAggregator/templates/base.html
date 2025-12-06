@@ -21,6 +21,10 @@
         </li>
         {% if user.is_authenticated %}
 
+        <li class="nav-item">
+            <a href="{% url 'favourites' %}" class="btn">Мои вакансии</a>
+            </li>
+
             <li class="nav-item">
             <a href="{% url 'search_vacantions' %}" class="btn">Поиск вакансий</a>
             </li>

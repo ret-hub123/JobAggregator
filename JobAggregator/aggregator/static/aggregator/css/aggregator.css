@@ -366,6 +366,41 @@
     font-size: 0.8rem;
     font-weight: 600;
 }
+
+
+.favorite-del{
+    text-decoration: none;
+    background-color: #40e0d0;
+    color: black;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.favorite-del:hover{
+    text-decoration: none;
+    color: red;
+}
+
+
+.favorite-add{
+    text-decoration: none;
+    background-color: #40e0d0;
+    color: black;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.favorite-add:hover{
+    text-decoration: none;
+    color: white;
+}
+
+
+
 .vacancy-card {
     height: 100%;
     display: flex;
@@ -374,3 +409,153 @@
 .vacancy-card .response-url {
     margin-top: auto;
 }
+
+
+/* Страница vacancy-filter */
+
+.vacancy-filter-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.filter-field {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: #666;
+}
+
+.filter-input-wrapper {
+    position: relative;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+}
+
+.filter-select:hover {
+    border-color: #999;
+}
+
+.filter-select:focus {
+    outline: none;
+    border-color: #4e73df;
+    box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.15);
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+.btn-apply {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    color: white;
+    border: 1px solid #4e73df;
+}
+
+.btn-apply:hover {
+    background: linear-gradient(135deg, #3a56c4 0%, #1a3cb1 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(78, 115, 223, 0.2);
+    color: white;
+}
+
+.btn-reset {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #dee2e6;
+}
+
+.btn-reset:hover {
+    background: #e9ecef;
+    color: #333;
+    border-color: #ced4da;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.btn-text {
+    background-color: #40e0d0;
+    color: black;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+}
+
+.btn-text-resert{
+    background-color: gray;
+    color: black;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+
+}
+
+.main-header{
+    margin-bottom: 10px;
+
+}
+
+/* statistic */
+
+.get-static {
+
+    display: block;
+    width: max-content;
+    margin: 50px auto 0 auto;
+    align-items: center;
+    font-size: 0.95rem;
+    background: #40e0d0;
+    color: black;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+
+}
+
+.get-static:hover {
+      background: #40e0d0;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+      color: white;
+      text-decoration: none;
+}
+
