@@ -18,12 +18,9 @@ RUN pip install --upgrade pip && \
                 matplotlib==3.10.7 \
                 numpy==2.3.5
 
-RUN pip install --upgrade pip
-
 COPY . .
 
 RUN chown -R userdj:groupdjango /app
-
 USER userdj
 
 EXPOSE $PORT
