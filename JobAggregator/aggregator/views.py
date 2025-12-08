@@ -17,7 +17,19 @@ from aggregator.statistics import Statistic
 
 class Index(TemplateView):
     template_name = 'aggregator/main.html'
-    extra_context = {'title': "Главная страница"}
+
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user if self.request.user.is_authenticated else None
+
+        context['title'] = "Добро пожаловать!"
+        context['last_favorite'] = Vacation.objects.filter(
+            user=user,
+            is_favorite=True
+        ).order_by('-published_at')[:2]
+        return context
+
 
 
 class DataNotFound(TemplateView):

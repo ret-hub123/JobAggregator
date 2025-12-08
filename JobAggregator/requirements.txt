@@ -1,0 +1,10 @@
+Django==5.2.7
+psycopg2-binary==2.9.10
+matplotlib==3.10.7
+numpy==2.3.5
+pillow==11.3.0
+requests==2.32.5
+beautifulsoup4==4.14.2
+asgiref==3.10.0
+sqlparse==0.5.3
+tzdata==2025.2

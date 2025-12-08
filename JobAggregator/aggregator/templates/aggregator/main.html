@@ -1,7 +1,83 @@
 {% extends 'base.html' %}
 
- {% block content %}
-<title>Title</title>
-    {% endblock %}
+{% block content %}
 
 
+    {% if user.is_authenticated %}
+        {# Контент для авторизованных пользователей #}
+        <div class="row">
+            <div class="col-md-8">
+                <h1 style="margin-bottom: 30px;">Добро пожаловать, {{ user.first_name }} {{ user.last_name }}!</h1>
+
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Недавно добавленные вакансии</h5>
+                    </div>
+                    <div class="card-body">
+
+<div class="container">
+
+    {% if last_favorite %}
+    <div class="row">
+        {% for vacation in last_favorite %}
+            <div class="col-12 col-md-6 mb-3">
+                <div class="vacancy-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge">{{ vacation.aggregator }}</span>
+
+                        
+                    </div>
+
+                    <div class="response-header mb-2">{{ vacation.name }}</div>
+                    <div class="response-company mb-3">{{ vacation.company }}</div>
+                    <div class="response-salary mb-3">{{ vacation.salary }}</div>
+                    <div class="response-address mb-3">{{ vacation.address }}</div>
+                    <div class="response-experience mb-3">{{ vacation.experience }}, {{ vacation.education }}</div>
+                    <div class="response-employment mb-3">{{ vacation.employment }}, {{ vacation.schedule }}</div>
+                    <div class="response-published_at mb-3">{{ vacation.published_at }}</div>
+                    <a class="response-url" href="{{ vacation.url }}" target="_blank">{{ vacation.url }}</a>
+                </div>
+            </div>
+
+            {% if forloop.counter|divisibleby:2 %}
+            <div class="w-100 d-none d-md-block"></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-heart-broken me-2"></i>
+            У вас пока нет избранных вакансий.
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ваша статистика</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Статистическая информация появится здесь позже.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    {% else %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">Добро пожаловать на JobAggregator!</h4>
+                    <p>Для доступа ко всем функциям сайта, пожалуйста, выполните вход или зарегистрируйтесь.</p>
+
+
+            </div>
+        </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

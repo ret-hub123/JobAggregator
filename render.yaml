@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: job-aggregator
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: "localhost,127.0.0.1,your-project.onrender.com"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://your-project.onrender.com"

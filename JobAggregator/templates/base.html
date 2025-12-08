@@ -39,14 +39,14 @@
 <li class="nav-item2">
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
-            <button type="submit" class="btn">Logout</button>
+            <button type="submit" class="btn">Выйти</button>
             </form>
               </li>
         {% else %}
         <li class="nav-item2">
          <form method="post" action="{% url 'login' %}">
             {% csrf_token %}
-            <button type="submit" class="btn">Login</button>
+            <button type="submit" class="btn">Войти</button>
             </form>
         </li>
 
@@ -55,7 +55,7 @@
         <li class="nav-item2">
          <form method="post" action="{% url 'registration' %}">
             {% csrf_token %}
-            <button type="submit" class="btn">Registration</button>
+            <button type="submit" class="btn">Зарегистрироваться</button>
             </form>
         </li>
 
