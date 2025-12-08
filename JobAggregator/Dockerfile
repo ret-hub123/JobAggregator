@@ -18,8 +18,7 @@ RUN pip install --upgrade pip && \
                 matplotlib==3.10.7 \
                 numpy==2.3.5
 
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
 
 COPY . .
 
