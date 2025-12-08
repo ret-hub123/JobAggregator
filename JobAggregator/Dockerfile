@@ -1,12 +1,5 @@
 FROM python:3.11-slim
 
-# Устанавливаем системные зависимости
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 # Создаем пользователя
 RUN groupadd -r groupdjango && useradd -r -g groupdjango userdj
 
