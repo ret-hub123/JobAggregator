@@ -10,11 +10,10 @@ class AvitoRabota(BaseParser):
         super().__init__()
         self.base_url = "https://www.avito.ru"
 
-        # Настройки защиты от блокировок
         self.request_delay = random.uniform(3, 7)  # увеличиваем задержку
         self.connect_timeout = 10
         self.read_timeout = 30
-        self.max_retries = 2  # уменьшаем попытки для Avito
+        self.max_retries = 2
 
         self.TOWN_PREFIXES = {
             "москва": "moskva",
@@ -36,7 +35,6 @@ class AvitoRabota(BaseParser):
         }
 
     def get_safe_response(self, method, url, **kwargs):
-        """Безопасный запрос с обработкой блокировок Avito"""
         for attempt in range(self.max_retries):
             try:
                 # Меняем User-Agent для каждого запроса

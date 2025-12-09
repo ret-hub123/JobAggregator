@@ -1,6 +1,9 @@
 import io
 import base64
 import matplotlib
+import pandas as pd
+import seaborn as sns
+import statsmodels.api as sm
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -190,7 +193,6 @@ class Statistic:
         if not self.vacancies_with_salary.exists():
             return None
 
-        # Группируем зарплаты по опыту
         experience_data = {}
         experience_labels = {
             'not_experience': 'Без опыта',
@@ -334,7 +336,6 @@ class Statistic:
                 'recommendation': 'Ищите высокооплачиваемые вакансии здесь'
             })
 
-            # Разница между платформами
             if avg_salaries[max_salary_idx] > 0 and avg_salaries[
                 min(range(len(avg_salaries)), key=avg_salaries.__getitem__)] > 0:
                 salary_ratio = avg_salaries[max_salary_idx] / avg_salaries[
@@ -460,3 +461,118 @@ class Statistic:
             }
         }
 
+
+class AdvancedAnalyzer:
+    def __init__(self, vacancies):
+        self.vacancies = vacancies
+        self.data = self.prepare_data()
+
+    def prepare_data(self):
+        data_list = []
+
+        for vacancy in self.vacancies:
+            if vacancy.salary:
+                experience_mapping = {
+                    'Без опыта': 0,
+                    'От 1 года': 1,
+                    'От 3 лет': 3,
+                    'От 6 лет': 6,
+                    'От 10 лет': 10
+                }
+
+                experience_num = experience_mapping.get(vacancy.experience, 0)
+
+                education_mapping = {
+                    'Высшее образование': 2,
+                    'Среднее профессиональное образование': 1,
+                    'Не требуется': 0
+                }
+
+                education_num = education_mapping.get(vacancy.education, 0)
+
+                platform_mapping = {
+                    'HeadHunter': 0,
+                    'SuperJob': 1,
+                    'Rabota.ru': 2
+                }
+
+                platform_num = platform_mapping.get(vacancy.aggregator, 0)
+
+                data_list.append({
+                    'salary': vacancy.salary,
+                    'experience': experience_num,
+                    'education': education_num,
+                    'platform': platform_num,
+                    'experience_text': vacancy.experience,
+                    'education_text': vacancy.education,
+                    'platform_text': vacancy.aggregator,
+                    'company': vacancy.company
+                })
+
+        return pd.DataFrame(data_list)
+
+    def perform_regression_analysis(self):
+        if len(self.data) < 10:
+            return {'error': 'Недостаточно данных для регрессионного анализа'}
+
+        X = self.data[['experience', 'education', 'platform']]
+        y = self.data['salary']
+
+        X_sm = sm.add_constant(X)
+        model = sm.OLS(y, X_sm).fit()
+
+        predictions = model.predict(X_sm)
+
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+        axes[0, 0].scatter(y, predictions, alpha=0.5)
+        axes[0, 0].plot([y.min(), y.max()], [y.min(), y.max()], 'r--', lw=2)
+        axes[0, 0].set_xlabel('Фактическая зарплата')
+        axes[0, 0].set_ylabel('Предсказанная зарплата')
+        axes[0, 0].set_title('Фактические vs Предсказанные значения')
+        axes[0, 0].grid(True, alpha=0.3)
+
+        residuals = y - predictions
+        axes[0, 1].scatter(predictions, residuals, alpha=0.5)
+        axes[0, 1].axhline(y=0, color='r', linestyle='--')
+        axes[0, 1].set_xlabel('Предсказанные значения')
+        axes[0, 1].set_ylabel('Остатки')
+        axes[0, 1].set_title('Анализ остатков')
+        axes[0, 1].grid(True, alpha=0.3)
+
+        coefficients = model.params[1:]  # исключаем константу
+        features = ['Опыт', 'Образование', 'Платформа']
+        axes[1, 0].bar(features, coefficients)
+        axes[1, 0].set_xlabel('Признаки')
+        axes[1, 0].set_ylabel('Коэффициент')
+        axes[1, 0].set_title('Важность признаков в регрессии')
+        axes[1, 0].grid(True, alpha=0.3, axis='y')
+
+        # 4. Распределение остатков
+        axes[1, 1].hist(residuals, bins=20, edgecolor='black', alpha=0.7)
+        axes[1, 1].set_xlabel('Остатки')
+        axes[1, 1].set_ylabel('Частота')
+        axes[1, 1].set_title('Распределение остатков')
+        axes[1, 1].grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100)
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+        regression_plot = base64.b64encode(image_png).decode('utf-8')
+        plt.close()
+
+        results = {
+            'regression_plot': regression_plot,
+            'summary': str(model.summary()),
+            'r_squared': model.rsquared,
+            'adj_r_squared': model.rsquared_adj,
+            'coefficients': model.params.to_dict(),
+            'p_values': model.pvalues.to_dict(),
+            'insights': self.generate_regression_insights(model)
+        }
+
+        return results

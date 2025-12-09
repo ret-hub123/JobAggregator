@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1 class="main-header">{{ title }}</h1>
+
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация об анализе</h5>
+                    <p class="card-text">
+                        <strong>Количество вакансий в анализе:</strong> {{ vacancy_count }}<br>
+                        <strong>Последний поисковой запрос:</strong> {{ last_search_query.query }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if regression_results.error %}
+        <div class="alert alert-warning">
+            {{ regression_results.error }}
+        </div>
+    {% else %}
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Визуализация регрессионного анализа</h5>
+                    </div>
+                    <div class="card-body">
+                        <img src="data:image/png;base64,{{ regression_results.regression_plot }}"
+                             alt="Регрессионный анализ" class="img-fluid">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Коэффициенты модели</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Фактор</th>
+                                    <th>Коэффициент</th>
+                                    <th>P-значение</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factor, coef in regression_results.coefficients.items %}
+                                <tr>
+                                    <td>{{ factor }}</td>
+                                    <td>{{ coef|floatformat:2 }}</td>
+                                    <td>
+                                        {% with p_value=regression_results.p_values|get_item:factor %}
+                                            {% if p_value < 0.05 %}
+                                                <span class="badge bg-success">{{ p_value|floatformat:4 }}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">{{ p_value|floatformat:4 }}</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Качество модели</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="display-6">{{ regression_results.r_squared|floatformat:3 }}</h3>
+                                        <p class="text-muted mb-0">R-квадрат</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h3 class="display-6">{{ regression_results.adj_r_squared|floatformat:3 }}</h3>
+                                        <p class="text-muted mb-0">Скорректированный R²</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        {% if regression_results.insights %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ключевые выводы</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for insight in regression_results.insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100 border-left-primary border-left-3">
+                                    <div class="card-body">
+                                        <p class="card-text">{{ insight }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Детальная информация о модели -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Детальная статистика модели</h5>
+                    </div>
+                    <div class="card-body">
+                        <pre style="max-height: 400px; overflow-y: auto; font-size: 0.8em;">{{ regression_results.summary }}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

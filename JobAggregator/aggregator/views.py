@@ -12,7 +12,8 @@ from django.contrib import messages
 
 from aggregator.forms import VacancyFilterForm
 
-from aggregator.statistics import Statistic
+from aggregator.statistics import Statistic,AdvancedAnalyzer
+
 
 
 class Index(TemplateView):
@@ -57,18 +58,15 @@ class FavouritesVacation(TemplateView):
 
     def post(self, request):
 
-        # Получаем ID вакансии из POST-запроса
         vacation_id = request.POST.get('vacation_id')
 
         if vacation_id:
             try:
-                # Находим вакансию текущего пользователя
                 vacation = Vacation.objects.get(
                     id=vacation_id,
                     user=request.user
                 )
 
-                # Используем метод модели
                 new_status = vacation.change_favorite()
 
                 return redirect('response_vacantions')
@@ -130,7 +128,6 @@ class SearchVacantions(FormView):
 
         print(f"Всего найдено вакансий: {len(saved_vacancy_ids)}")
 
-        # Сохраняем в сессию только ID вакансий
         self.request.session['vacancy_ids'] = saved_vacancy_ids
 
         if user and user.is_authenticated and saved_vacancy_objects:
@@ -244,11 +241,9 @@ class ResponseVacations(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        # Получаем ID вакансий из сессии
         vacancy_ids = self.request.session.get('vacancy_ids', [])
 
         if vacancy_ids:
-            # Получаем объекты Vacation по ID
             vacations = Vacation.objects.filter(id__in=vacancy_ids)
         else:
             vacations = Vacation.objects.none()
@@ -310,16 +305,13 @@ class ResponseVacations(TemplateView):
 
         if vacation_id:
             try:
-                # Находим вакансию текущего пользователя
                 vacation = Vacation.objects.get(
                     id=vacation_id,
                     user=request.user
                 )
 
-                # Используем метод модели
                 vacation.change_favorite()
 
-                # Возвращаем на ту же страницу результатов
                 return redirect('response_vacantions')
 
             except Exception as e:
@@ -357,4 +349,43 @@ class StatisticPage(TemplateView):
         context['stat'] = stat.get_base_statistics()
         context['title'] = 'Статистика'
 
+        return context
+
+
+class RegressionAnalysis(TemplateView):
+    template_name = 'aggregator/regression_analysis.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        last_search_query = SearchQuery.objects.filter(
+            user=self.request.user
+        ).order_by('-created_at').first()
+
+        if last_search_query:
+            vacations = last_search_query.vacancies.all()
+
+        filtered_vacancy_ids = self.request.session.get('filtered_vacancy_ids')
+        print(filtered_vacancy_ids)
+        if filtered_vacancy_ids and isinstance(filtered_vacancy_ids[0], list):
+            filtered_vacancy_ids = [int(i[0]) for i in filtered_vacancy_ids]
+
+        if filtered_vacancy_ids:
+            vacations = vacations.filter(id__in=filtered_vacancy_ids)
+
+        stat = AdvancedAnalyzer(vacations)
+        context['stat'] = stat.perform_regression_analysis()
+        context['title'] = 'Статистика'
+
+        context['title'] = 'Регрессионный анализ'
+        return context
+
+
+class CorrelationAnalysisView(TemplateView):
+    template_name = 'aggregator/regression_analysis.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['title'] = 'Корреляционный анализ'
         return context

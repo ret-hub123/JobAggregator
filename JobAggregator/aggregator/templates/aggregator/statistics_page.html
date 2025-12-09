@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    <h1 class="main-header">{{ title }}</h1>
+
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="card text-center bg-light">
+                <div class="card-body">
+                    <h2 class="display-6">{{ stat.total }}</h2>
+                    <p class="text-muted mb-0">Всего вакансий</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-light">
+                <div class="card-body">
+                    <h2 class="display-6">{{ stat.with_salary }}</h2>
+                    <p class="text-muted mb-0">С указанной ЗП</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-light">
+                <div class="card-body">
+                    <h2 class="display-6">{{ stat.avg_salary }} ₽</h2>
+                    <p class="text-muted mb-0">Средняя зарплата</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center bg-light">
+                <div class="card-body">
+                    <h2 class="display-6">{{ stat.min_salary }} ₽</h2>
+                    <p class="text-muted mb-0">Минимальная ЗП</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if stat.all_insights %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        {% for insight in stat.all_insights %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-left-success border-left-3">
+                                <div class="card-body">
+                                    <h6 class="card-title text-success">
+                                        {{ insight.title }}
+                                    </h6>
+                                    <p class="card-text">{{ insight.description }}</p>
+                                    {% if insight.value %}
+                                    <div class="mt-2">
+                                        <span class="badge bg-success">
+                                            {{ insight.value }} {{ insight.unit }}
+                                        </span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Распределение зарплат</h5>
+
+                </div>
+                <div class="card-body">
+                    {% if stat.salary_distribution %}
+                    <img src="data:image/png;base64,{{ stat.salary_distribution }}"
+                         alt="Распределение зарплат" class="img-fluid mb-4">
+
+                    {% if stat.salary_distribution_insights %}
+                    <div class="insights-section mt-4">
+                        <h6>Что это значит?</h6>
+                        <div class="row">
+                            {% for insight in stat.salary_distribution_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ insight.title }}</h6>
+                                        <p class="card-text small">{{ insight.description }}</p>
+                                        {% if insight.details %}
+                                        <p class="card-text"><small class="text-muted">{{ insight.details }}</small></p>
+                                        {% endif %}
+                                        {% if insight.recommendation %}
+                                        <div class="alert alert-light mt-2 p-2">
+                                            <small><strong>💡 Совет:</strong> {{ insight.recommendation }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">Недостаточно данных для построения графика</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Опыт к зарплате</h5>
+                    {% if stat.experience_insights %}
+                    <span class="badge bg-info">Анализ: {{ stat.experience_insights|length }} выводов</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if stat.experience_chart %}
+                    <img src="data:image/png;base64,{{ stat.experience_chart }}"
+                         alt="Зарплата по опыту" class="img-fluid mb-4">
+
+
+                    {% if stat.experience_insights %}
+                    <div class="insights-section mt-4">
+                        <h6>Анализ влияния опыта:</h6>
+                        <div class="row">
+                            {% for insight in stat.experience_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ insight.title }}</h6>
+                                        <p class="card-text small">{{ insight.description }}</p>
+                                        {% if insight.details %}
+                                        <p class="card-text"><small class="text-muted">{{ insight.details }}</small></p>
+                                        {% endif %}
+                                        {% if insight.recommendation %}
+                                        <div class="alert alert-light mt-2 p-2">
+                                            <small><strong>💡 Совет:</strong> {{ insight.recommendation }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">Недостаточно данных для построения графика</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Сравнение платформ</h5>
+
+                </div>
+                <div class="card-body">
+                    {% if stat.platform_comparison %}
+                    <img src="data:image/png;base64,{{ stat.platform_comparison }}"
+                         alt="Сравнение платформ" class="img-fluid mb-4">
+
+                    {% if stat.platform_insights %}
+                    <div class="insights-section mt-4">
+                        <h6>Где искать работу?</h6>
+                        <div class="row">
+                            {% for insight in stat.platform_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ insight.title }}</h6>
+                                        <p class="card-text small">{{ insight.description }}</p>
+                                        {% if insight.details %}
+                                        <p class="card-text"><small class="text-muted">{{ insight.details }}</small></p>
+                                        {% endif %}
+                                        {% if insight.recommendation %}
+                                        <div class="alert alert-light mt-2 p-2">
+                                            <small><strong>💡 Совет:</strong> {{ insight.recommendation }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <p class="text-muted">Недостаточно данных для построения графика</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Влияние образования на зарплату</h5>
+
+                </div>
+                <div class="card-body">
+                    {% if stat.education_charts %}
+                    <img src="data:image/png;base64,{{ stat.education_charts }}"
+                         alt="Влияние образования" class="img-fluid mb-4">
+
+
+                    {% if stat.education_insights %}
+                    <div class="insights-section mt-4">
+                        <h6>Как образование влияет на зарплату?</h6>
+                        <div class="row">
+                            {% for insight in stat.education_insights %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ insight.title }}</h6>
+                                        <p class="card-text small">{{ insight.description }}</p>
+                                        {% if insight.details %}
+                                        <p class="card-text"><small class="text-muted">{{ insight.details }}</small></p>
+                                        {% endif %}
+                                        {% if insight.recommendation %}
+                                        <div class="alert alert-light mt-2 p-2">
+                                            <small><strong>💡 Совет:</strong> {{ insight.recommendation }}</small>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+
+                    {% else %}
+                    <p class="text-muted">Недостаточно данных для построения графика</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!--
+
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                                    <h5 class="card-title">Регрессионный анализ</h5>
+                                    <p class="card-text small text-muted">
+                                        Анализ влияния опыта, образования и других факторов на зарплату
+                                    </p>
+                                    <a href="{% url 'regression_analysis' %}" class="btn btn-outline-primary">
+                                        Перейти к анализу
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                <div class="col-md-4 mb-3">
+                            <div class="card h-100 border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-project-diagram fa-3x text-success mb-3"></i>
+                                    <h5 class="card-title">Корреляционный анализ</h5>
+                                    <p class="card-text small text-muted">
+                                        Исследование взаимосвязей между различными факторами вакансий
+                                    </p>
+                                    <a href="{% url 'correlation_analysis' %}" class="btn btn-outline-success">
+                                        Перейти к анализу
+                                    </a>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+
+                 -->
+
+</div>
+{% endblock %}

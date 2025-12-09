@@ -1,6 +1,6 @@
 
 from django.urls import path, include
-from aggregator.views import Index, SearchVacantions, ResponseVacations, DataNotFound, FavouritesVacation, StatisticPage
+from aggregator.views import Index, SearchVacantions, ResponseVacations, DataNotFound, FavouritesVacation, StatisticPage, RegressionAnalysis, CorrelationAnalysisView
 
 
 urlpatterns = [
@@ -10,4 +10,8 @@ urlpatterns = [
     path('response-vacantions/', ResponseVacations.as_view(), name='response_vacantions'),
     path('statistics/', StatisticPage.as_view(), name='statistics'),
     path('data-not-found/', DataNotFound.as_view(), name='data_not_found'),
+
+    path('regression_analysis/', RegressionAnalysis.as_view(), name='regression_analysis'),
+    path('correlation_analysis/', CorrelationAnalysisView.as_view(), name='correlation_analysis')
+
 ]

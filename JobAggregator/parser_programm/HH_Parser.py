@@ -45,8 +45,6 @@ class HHParser(BaseParser):
 
         dt = datetime.fromisoformat(vacancy['published_at'])
 
-        print(self.extract_education(vacancy['snippet']['requirement']))
-
         self.processed_vacancy = {
             'agregator': 'HeadHunter',
             'name': vacancy['name'],

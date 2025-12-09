@@ -26,7 +26,7 @@ class Vacation(models.Model):
     name = models.CharField(max_length=255, verbose_name='Название вакансии')
     company = models.CharField(max_length=255, verbose_name='Компания')
     salary = models.IntegerField(null=True, blank=True, verbose_name='Зарплата')
-    address = models.TextField(verbose_name='Адрес')
+    address = models.TextField(verbose_name='Адрес', blank=True, default="Не указано")
     experience = models.CharField(max_length=100, verbose_name='Опыт работы',
     choices = [
         ('not_experience', 'Нет опыта'),
