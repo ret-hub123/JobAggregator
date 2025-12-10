@@ -370,22 +370,53 @@ class RegressionAnalysis(TemplateView):
         if filtered_vacancy_ids and isinstance(filtered_vacancy_ids[0], list):
             filtered_vacancy_ids = [int(i[0]) for i in filtered_vacancy_ids]
 
-        if filtered_vacancy_ids:
-            vacations = vacations.filter(id__in=filtered_vacancy_ids)
+
+        vacations = vacations.filter(id__in=filtered_vacancy_ids)
 
         stat = AdvancedAnalyzer(vacations)
         context['stat'] = stat.perform_regression_analysis()
-        context['title'] = 'Статистика'
-
+        context['last_search_query'] = last_search_query
+        context['vacancy_count'] = vacations.count()
         context['title'] = 'Регрессионный анализ'
         return context
 
 
 class CorrelationAnalysisView(TemplateView):
-    template_name = 'aggregator/regression_analysis.html'
+    template_name = 'aggregator/correlation_analysis.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        last_search_query = SearchQuery.objects.filter(
+            user=self.request.user
+        ).order_by('-created_at').first()
+
+        if last_search_query:
+            vacancies = last_search_query.vacancies.all()
+        else:
+            vacancies = Vacation.objects.all()
+
+        filtered_vacancy_ids = self.request.session.get('filtered_vacancy_ids')
+
+
+        if filtered_vacancy_ids and isinstance(filtered_vacancy_ids[0], list):
+            filtered_vacancy_ids = [int(i[0]) for i in filtered_vacancy_ids]
+
+        if filtered_vacancy_ids:
+            vacancies = vacancies.filter(id__in=filtered_vacancy_ids)
+
+        if vacancies.count() == 0:
+            context['stat'] = {'error': 'Нет вакансий для анализа'}
+            context['vacancy_count'] = 0
+            context['title'] = 'Корреляционный анализ'
+            return context
+
+        stat = AdvancedAnalyzer(vacancies)
+        analysis_result = stat.perform_correlation_analysis()
+
+
+        context['stat'] = analysis_result
+        context['last_search_query'] = last_search_query
+        context['vacancy_count'] = vacancies.count()
         context['title'] = 'Корреляционный анализ'
         return context

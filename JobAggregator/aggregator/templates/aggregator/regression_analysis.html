@@ -5,27 +5,39 @@
 <div class="container">
     <h1 class="main-header">{{ title }}</h1>
 
-
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Информация об анализе</h5>
                     <p class="card-text">
-                        <strong>Количество вакансий в анализе:</strong> {{ vacancy_count }}<br>
-                        <strong>Последний поисковой запрос:</strong> {{ last_search_query.query }}
+                        <strong>Количество вакансий в анализе:</strong>
+                        {% if stat.data_count %}
+                            {{ stat.data_count }}
+                        {% else %}
+                            {{ vacancy_count }}
+                        {% endif %}<br>
+
+                        {% if last_search_query %}
+                            <strong>Последний поисковой запрос:</strong> "{{ last_search_query.query }}"
+                        {% endif %}
                     </p>
                 </div>
             </div>
         </div>
     </div>
 
-    {% if regression_results.error %}
+    {% if stat.error %}
         <div class="alert alert-warning">
-            {{ regression_results.error }}
+            <h5> Внимание!</h5>
+            <p>{{ stat.error }}</p>
+            {% if stat.data_count %}
+                <p><strong>Найдено вакансий с зарплатой:</strong> {{ stat.data_count }}</p>
+            {% endif %}
         </div>
     {% else %}
 
+        {% if stat.regression_plot %}
         <div class="row mb-4">
             <div class="col-md-12">
                 <div class="card">
@@ -33,119 +45,218 @@
                         <h5 class="mb-0">Визуализация регрессионного анализа</h5>
                     </div>
                     <div class="card-body">
-                        <img src="data:image/png;base64,{{ regression_results.regression_plot }}"
-                             alt="Регрессионный анализ" class="img-fluid">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Коэффициенты модели</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Фактор</th>
-                                    <th>Коэффициент</th>
-                                    <th>P-значение</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for factor, coef in regression_results.coefficients.items %}
-                                <tr>
-                                    <td>{{ factor }}</td>
-                                    <td>{{ coef|floatformat:2 }}</td>
-                                    <td>
-                                        {% with p_value=regression_results.p_values|get_item:factor %}
-                                            {% if p_value < 0.05 %}
-                                                <span class="badge bg-success">{{ p_value|floatformat:4 }}</span>
-                                            {% else %}
-                                                <span class="badge bg-warning">{{ p_value|floatformat:4 }}</span>
-                                            {% endif %}
-                                        {% endwith %}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Качество модели</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h3 class="display-6">{{ regression_results.r_squared|floatformat:3 }}</h3>
-                                        <p class="text-muted mb-0">R-квадрат</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <h3 class="display-6">{{ regression_results.adj_r_squared|floatformat:3 }}</h3>
-                                        <p class="text-muted mb-0">Скорректированный R²</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-        {% if regression_results.insights %}
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Ключевые выводы</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            {% for insight in regression_results.insights %}
-                            <div class="col-md-6 mb-3">
-                                <div class="card h-100 border-left-primary border-left-3">
-                                    <div class="card-body">
-                                        <p class="card-text">{{ insight }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
+                        <img src="data:image/png;base64,{{ stat.regression_plot }}"
+                             alt="Регрессионный анализ" class="img-fluid rounded">
                     </div>
                 </div>
             </div>
         </div>
         {% endif %}
 
-        <!-- Детальная информация о модели -->
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Детальная статистика модели</h5>
-                    </div>
+        {% if stat.r_squared %}
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card text-center">
                     <div class="card-body">
-                        <pre style="max-height: 400px; overflow-y: auto; font-size: 0.8em;">{{ regression_results.summary }}</pre>
+                        <h2 class="display-6">{{ stat.r_squared|floatformat:3 }}</h2>
+                        <p class="text-muted">R-квадрат</p>
+                        <div class="small">
+                            {% if stat.r_squared > 0.7 %}
+                                <span class="badge bg-success">Отличное качество</span>
+                            {% elif stat.r_squared > 0.5 %}
+                                <span class="badge bg-warning">Хорошее качество</span>
+                            {% else %}
+                                <span class="badge bg-danger">Низкое качество</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h2 class="display-6">{{ stat.adj_r_squared|floatformat:3 }}</h2>
+                        <p class="text-muted">Скоррект. R²</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Что означают метрики:</h5>
+                        <ul class="small">
+                            <li><strong>R-квадрат</strong> показывает, насколько хорошо модель объясняет изменения в зарплатах</li>
+                            <li><strong>Скорректированный R²</strong> учитывает количество факторов</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
+
+
+        {% if stat.coefficients %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Влияние факторов на зарплату</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Фактор</th>
+                                    <th>Коэффициент</th>
+                                    <th>Влияние</th>
+                                    <th>Статистическая значимость</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                {% if 'experience' in stat.coefficients %}
+                                <tr>
+                                    <td>Опыт работы</td>
+                                    <td class="fw-bold">
+                                        {{ stat.coefficients.experience|floatformat:0 }} руб.
+                                    </td>
+                                    <td>
+                                        {% if stat.coefficients.experience > 0 %}
+                                            <span class="text-success">↑ Увеличивает зарплату</span>
+                                        {% elif stat.coefficients.experience < 0 %}
+                                            <span class="text-danger">↓ Уменьшает зарплату</span>
+                                        {% else %}
+                                            <span class="text-muted">Без влияния</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if 'experience' in stat.p_values and stat.p_values.experience < 0.05 %}
+                                            <span class="badge bg-success">Значимый</span>
+                                            <small class="text-muted">(p={{ stat.p_values.experience|floatformat:4 }})</small>
+                                        {% else %}
+                                            <span class="badge bg-warning">Незначимый</span>
+                                            {% if 'experience' in stat.p_values %}
+                                            <small class="text-muted">(p={{ stat.p_values.experience|floatformat:4 }})</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                {% if 'education' in stat.coefficients %}
+                                <tr>
+                                    <td>Образование</td>
+                                    <td class="fw-bold">
+                                        {{ stat.coefficients.education|floatformat:0 }} руб.
+                                    </td>
+                                    <td>
+                                        {% if stat.coefficients.education > 0 %}
+                                            <span class="text-success">↑ Увеличивает зарплату</span>
+                                        {% elif stat.coefficients.education < 0 %}
+                                            <span class="text-danger">↓ Уменьшает зарплату</span>
+                                        {% else %}
+                                            <span class="text-muted">Без влияния</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if 'education' in stat.p_values and stat.p_values.education < 0.05 %}
+                                            <span class="badge bg-success">Значимый</span>
+                                            <small class="text-muted">(p={{ stat.p_values.education|floatformat:4 }})</small>
+                                        {% else %}
+                                            <span class="badge bg-warning">Незначимый</span>
+                                            {% if 'education' in stat.p_values %}
+                                            <small class="text-muted">(p={{ stat.p_values.education|floatformat:4 }})</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+
+                                {% if 'platform' in stat.coefficients %}
+                                <tr>
+                                    <td>Платформа</td>
+                                    <td class="fw-bold">
+                                        {{ stat.coefficients.platform|floatformat:0 }} руб.
+                                    </td>
+                                    <td>
+                                        {% if stat.coefficients.platform > 0 %}
+                                            <span class="text-success">↑ Увеличивает зарплату</span>
+                                        {% elif stat.coefficients.platform < 0 %}
+                                            <span class="text-danger">↓ Уменьшает зарплату</span>
+                                        {% else %}
+                                            <span class="text-muted">Без влияния</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if 'platform' in stat.p_values and stat.p_values.platform < 0.05 %}
+                                            <span class="badge bg-success">Значимый</span>
+                                            <small class="text-muted">(p={{ stat.p_values.platform|floatformat:4 }})</small>
+                                        {% else %}
+                                            <span class="badge bg-warning">Незначимый</span>
+                                            {% if 'platform' in stat.p_values %}
+                                            <small class="text-muted">(p={{ stat.p_values.platform|floatformat:4 }})</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                {% if 'const' in stat.coefficients %}
+                                <tr>
+                                    <td>Базовый уровень зарплаты</td>
+                                    <td class="fw-bold">
+                                        {{ stat.coefficients.const|floatformat:0 }} руб.
+                                    </td>
+                                    <td>
+                                        <span class="text-info">Базовое значение</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Базовая линия</span>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                        <p class="text-muted small">
+                            <strong>Пояснение:</strong> Положительный коэффициент означает, что увеличение фактора повышает зарплату.
+                            P-значение &lt; 0.05 показывает статистическую значимость фактора.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stat.insights %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">💡 Ключевые выводы</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            {% for insight in stat.insights %}
+                            <li class="list-group-item">{{ insight|safe }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
     {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="{% url 'statistics' %}" class="btn btn-secondary">
+                Вернуться к статистике
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}

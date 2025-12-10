@@ -467,6 +467,62 @@ class AdvancedAnalyzer:
         self.vacancies = vacancies
         self.data = self.prepare_data()
 
+    def perform_correlation_analysis(self):
+        if len(self.data) < 5:
+            return {'error': 'Недостаточно данных для корреляционного анализа. Минимум 10 записей.'}
+
+        corr_matrix = self.data[['salary', 'experience', 'education', 'platform']].corr()
+
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
+        sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='coolwarm', center=0, square=True,
+                    ax=ax, cbar_kws={"shrink": 0.8}, linewidths=1, linecolor='white')
+
+        ax.set_title('Матрица корреляций', fontsize=16, fontweight='bold', pad=20)
+
+        labels = ['Зарплата', 'Опыт работы', 'Образование', 'Платформа']
+        ax.set_xticklabels(labels, fontsize=12, rotation=45, ha='right')
+        ax.set_yticklabels(labels, fontsize=12, rotation=0)
+        plt.tight_layout()
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=120, bbox_inches='tight')
+        buffer.seek(0)
+        image_png = buffer.getvalue()
+        buffer.close()
+        correlation_plot = base64.b64encode(image_png).decode('utf-8')
+        plt.close()
+
+        salary_correlations = {}
+        for factor in ['experience', 'education', 'platform']:
+            if factor in corr_matrix.index:
+                correlation = corr_matrix.loc['salary', factor]
+                salary_correlations[factor] = {
+                    'correlation': correlation,
+                    'strength': self.get_correlation_strength(abs(correlation)),
+                    'direction': 'положительная' if correlation > 0 else 'отрицательная'
+                }
+
+        results = {
+            'correlation_plot': correlation_plot,
+            'correlation_matrix': corr_matrix.to_dict(),
+            'salary_correlations': salary_correlations,
+            'data_count': len(self.data)
+        }
+
+        return results
+
+    def get_correlation_strength(self, r_value):
+        abs_r = abs(r_value)
+        if abs_r >= 0.7:
+            return 'сильная'
+        elif abs_r >= 0.3:
+            return 'умеренная'
+        elif abs_r >= 0.1:
+            return 'слабая'
+        else:
+            return 'очень слабая'
+
     def prepare_data(self):
         data_list = []
 
@@ -483,9 +539,11 @@ class AdvancedAnalyzer:
                 experience_num = experience_mapping.get(vacancy.experience, 0)
 
                 education_mapping = {
-                    'Высшее образование': 2,
-                    'Среднее профессиональное образование': 1,
-                    'Не требуется': 0
+                    ' ученая степень': 3,
+                    ' высшее образование': 2,
+                    ' среднее образование': 1,
+                    ' среднее профессиональное образование': 1,
+                    ' Не имеет значения': 0
                 }
 
                 education_num = education_mapping.get(vacancy.education, 0)
@@ -518,10 +576,10 @@ class AdvancedAnalyzer:
         X = self.data[['experience', 'education', 'platform']]
         y = self.data['salary']
 
-        X_sm = sm.add_constant(X)
-        model = sm.OLS(y, X_sm).fit()
+        X = sm.add_constant(X)
+        model = sm.OLS(y, X).fit()
 
-        predictions = model.predict(X_sm)
+        predictions = model.predict(X)
 
         fig, axes = plt.subplots(2, 2, figsize=(12, 10))
 
@@ -540,7 +598,7 @@ class AdvancedAnalyzer:
         axes[0, 1].set_title('Анализ остатков')
         axes[0, 1].grid(True, alpha=0.3)
 
-        coefficients = model.params[1:]  # исключаем константу
+        coefficients = model.params[1:]
         features = ['Опыт', 'Образование', 'Платформа']
         axes[1, 0].bar(features, coefficients)
         axes[1, 0].set_xlabel('Признаки')
@@ -548,7 +606,7 @@ class AdvancedAnalyzer:
         axes[1, 0].set_title('Важность признаков в регрессии')
         axes[1, 0].grid(True, alpha=0.3, axis='y')
 
-        # 4. Распределение остатков
+
         axes[1, 1].hist(residuals, bins=20, edgecolor='black', alpha=0.7)
         axes[1, 1].set_xlabel('Остатки')
         axes[1, 1].set_ylabel('Частота')
@@ -572,7 +630,7 @@ class AdvancedAnalyzer:
             'adj_r_squared': model.rsquared_adj,
             'coefficients': model.params.to_dict(),
             'p_values': model.pvalues.to_dict(),
-            'insights': self.generate_regression_insights(model)
+
         }
 
         return results

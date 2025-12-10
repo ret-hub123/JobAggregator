@@ -1,6 +1,151 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
+<div class="container">
     <h1 class="main-header">{{ title }}</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация об анализе</h5>
+                    <p class="card-text">
+                        <strong>Количество вакансий в анализе:</strong>
+                        {% if stat.data_count %}
+                            {{ stat.data_count }}
+                        {% else %}
+                            {{ vacancy_count }}
+                        {% endif %}<br>
+
+                        {% if last_search_query %}
+                            <strong>Последний поисковой запрос:</strong> "{{ last_search_query.query }}"
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if stat.error %}
+        <div class="alert alert-warning">
+            <h5>Внимание!</h5>
+            <p>{{ stat.error }}</p>
+            {% if stat.data_count %}
+                <p><strong>Найдено вакансий с зарплатой:</strong> {{ stat.data_count }}</p>
+            {% endif %}
+        </div>
+    {% else %}
+
+        {% if stat.correlation_plot %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Визуализация корреляционного анализа</h5>
+                    </div>
+                    <div class="card-body">
+                        <img src="data:image/png;base64,{{ stat.correlation_plot }}"
+                             alt="Корреляционный анализ" class="img-fluid rounded">
+                        <p class="text-muted small mt-2">
+                            <strong>Пояснение:</strong> Слева - тепловая карта корреляций (от -1 до 1),
+                            справа - диаграммы рассеяния с линиями тренда.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if stat.salary_correlations %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Корреляции факторов с зарплатой</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Фактор</th>
+                                    <th>Коэффициент корреляции</th>
+                                    <th>Сила связи</th>
+                                    <th>Направление</th>
+                                    <th>Интерпретация</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factor, corr_info in stat.salary_correlations.items %}
+                                <tr>
+                                    <td>
+                                        {% if factor == 'experience' %}
+                                            Опыт работы
+                                        {% elif factor == 'education' %}
+                                            Образование
+                                        {% elif factor == 'platform' %}
+                                            Платформа
+                                        {% else %}
+                                            {{ factor }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">
+                                        {{ corr_info.correlation|floatformat:3 }}
+                                    </td>
+                                    <td>
+                                        {% if corr_info.strength == 'сильная' %}
+                                            <span class="badge bg-success">{{ corr_info.strength }}</span>
+                                        {% elif corr_info.strength == 'умеренная' %}
+                                            <span class="badge bg-warning">{{ corr_info.strength }}</span>
+                                        {% elif corr_info.strength == 'слабая' %}
+                                            <span class="badge bg-secondary">{{ corr_info.strength }}</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">{{ corr_info.strength }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if corr_info.direction == 'положительная' %}
+                                            <span class="text-success">↑ Прямая связь</span>
+                                        {% else %}
+                                            <span class="text-danger">↓ Обратная связь</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="small">
+                                        {% if corr_info.strength == 'сильная' and corr_info.direction == 'положительная' %}
+                                            Сильный рост зарплаты с увеличением фактора
+                                        {% elif corr_info.strength == 'сильная' and corr_info.direction == 'отрицательная' %}
+                                            Сильное снижение зарплаты с увеличением фактора
+                                        {% elif corr_info.strength == 'умеренная' and corr_info.direction == 'положительная' %}
+                                            Умеренный рост зарплаты с увеличением фактора
+                                        {% elif corr_info.strength == 'умеренная' and corr_info.direction == 'отрицательная' %}
+                                            Умеренное снижение зарплаты с увеличением фактора
+                                        {% elif corr_info.strength == 'слабая' %}
+                                            Слабая зависимость от фактора
+                                        {% else %}
+                                            Практически отсутствует зависимость
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+
+    {% endif %}
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="{% url 'statistics' %}" class="btn btn-secondary">
+                ← Вернуться к статистике
+            </a>
+        </div>
+    </div>
+</div>
+
 
 {% endblock %}
