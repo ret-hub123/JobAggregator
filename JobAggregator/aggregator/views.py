@@ -66,11 +66,8 @@ class FavouritesVacation(TemplateView):
                     id=vacation_id,
                     user=request.user
                 )
-
                 new_status = vacation.change_favorite()
-
                 return redirect('response_vacantions')
-
 
             except Exception as e:
                 messages.error(request, f'Ошибка: {str(e)}')
@@ -324,7 +321,6 @@ class ResponseVacations(TemplateView):
 class StatisticPage(TemplateView):
     template_name = 'aggregator/statistics_page.html'
 
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -335,16 +331,13 @@ class StatisticPage(TemplateView):
         if last_search_query:
             vacations = last_search_query.vacancies.all()
 
-
         filtered_vacancy_ids = self.request.session.get('filtered_vacancy_ids')
         print(filtered_vacancy_ids)
         if filtered_vacancy_ids and isinstance(filtered_vacancy_ids[0], list):
             filtered_vacancy_ids = [int(i[0]) for i in filtered_vacancy_ids]
 
-
         if filtered_vacancy_ids:
             vacations = vacations.filter(id__in=filtered_vacancy_ids)
-
         stat = Statistic(vacations)
         context['stat'] = stat.get_base_statistics()
         context['title'] = 'Статистика'
@@ -420,3 +413,86 @@ class CorrelationAnalysisView(TemplateView):
         context['vacancy_count'] = vacancies.count()
         context['title'] = 'Корреляционный анализ'
         return context
+
+
+class DecisionTreeAnalysisView(TemplateView):
+    template_name = 'aggregator/decision_tree_analysis.html'
+
+    def get_context_data(self, **kwargs):
+            context = super().get_context_data(**kwargs)
+
+
+            last_search_query = SearchQuery.objects.filter(
+                user=self.request.user
+            ).order_by('-created_at').first()
+
+            if last_search_query and hasattr(last_search_query, 'vacancies'):
+                vacancies = last_search_query.vacancies.all()
+            else:
+                vacancies = Vacation.objects.all()
+
+
+            filtered_vacancy_ids = self.request.session.get('filtered_vacancy_ids', [])
+
+            clean_ids = []
+            if filtered_vacancy_ids:
+                for item in filtered_vacancy_ids:
+                    if isinstance(item, list):
+                        for subitem in item:
+                            if isinstance(subitem, (int, str)):
+                                try:
+                                    clean_ids.append(int(subitem))
+                                except (ValueError, TypeError):
+                                    continue
+                    elif isinstance(item, (int, str)):
+                        try:
+                            clean_ids.append(int(item))
+                        except (ValueError, TypeError):
+                            continue
+
+            if clean_ids:
+                vacancies = vacancies.filter(id__in=clean_ids)
+
+            vacancies = vacancies.filter(
+                salary__isnull=False,
+                salary__gt=0,
+                experience__isnull=False,
+                education__isnull=False,
+                aggregator__isnull=False
+            ).distinct()
+
+            vacancy_count = vacancies.count()
+
+            if vacancy_count == 0:
+                context['analysis'] = {'error': 'Нет вакансий для анализа. Выполните поиск или сбросьте фильтры.'}
+                context['vacancy_count'] = 0
+                context['title'] = 'Деревья решений'
+                context['last_search_query'] = last_search_query
+                return context
+
+            max_samples = 5000
+            if vacancy_count > max_samples:
+                vacancies = vacancies[:max_samples]
+                vacancy_count = max_samples
+
+            analyzer = AdvancedAnalyzer(vacancies)
+            analysis_result = analyzer.analyze_decision_tree()
+
+            if 'error' in analysis_result:
+                context['analysis'] = analysis_result
+            else:
+
+                analysis_result['data_info'] = {
+                    'total_vacancies': vacancy_count,
+                    'filtered_count': len(clean_ids) if clean_ids else 0,
+                    'has_filters': bool(clean_ids)
+                }
+                context['analysis'] = analysis_result
+
+            context['last_search_query'] = last_search_query
+            context['vacancy_count'] = vacancy_count
+            context['title'] = 'Анализ деревьев решений'
+
+
+
+            return context

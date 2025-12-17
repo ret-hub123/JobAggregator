@@ -2,7 +2,6 @@ from datetime import datetime
 
 from parser_programm.Base_Parser import BaseParser
 
-
 class HHParser(BaseParser):
     def __init__(self):
         super().__init__()
@@ -14,9 +13,7 @@ class HHParser(BaseParser):
             'area': TOWN_CODES[search_params.get('area')],
             'period': search_params.get('period', 30),
             'page': search_params.get('volume', 1),
-
         }
-
         response = self.get_response('GET', self.base_url, params = params)
         if response:
             data = response.json()

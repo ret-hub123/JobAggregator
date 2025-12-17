@@ -6,7 +6,6 @@ import requests
 from abc import ABC, abstractmethod
 import logging
 
-
 class BaseParser(ABC):
     def __init__(self):
         self.session = requests.Session()
@@ -30,11 +29,9 @@ class BaseParser(ABC):
     def get_response(self, method, url, **kwargs):
         try:
             time.sleep(random.uniform(2, 5))
-
             self.session.headers.update({
                 'User-Agent': random.choice(self.user_agents)
             })
-
             response = self.session.request(method, url, **kwargs)
             response.raise_for_status()
 
@@ -42,7 +39,6 @@ class BaseParser(ABC):
         except requests.RequestException as e:
             self.logger.error(f"Request error for {url}: {e}")
             return None
-
 
     @abstractmethod
     def parse_vacantions(self, search_params):

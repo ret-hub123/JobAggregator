@@ -1,0 +1,183 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="main-header">Анализ деревьев решений</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Информация об анализе</h5>
+                    <p class="card-text">
+                        <strong>Количество вакансий:</strong> {{ analysis.tree_parameters.total_samples }}<br>
+                        <strong>Обучающая выборка:</strong> {{ analysis.tree_parameters.n_samples_train }}<br>
+                        <strong>Тестовая выборка:</strong> {{ analysis.tree_parameters.n_samples_test }}<br>
+                        <strong>Глубина дерева:</strong> {{ analysis.tree_parameters.max_depth }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if analysis.error %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="alert alert-danger">
+                <h5>Ошибка анализа</h5>
+                <p>{{ analysis.error }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Метрики модели дерева решений</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="card text-white bg-primary mb-3">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Коэффициент детерминации</h6>
+                                    <h3 class="card-text">{{ analysis.model_metrics.r_squared }}</h3>
+                                    <small>R² Score</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-success mb-3">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Средняя ошибка</h6>
+                                    <h3 class="card-text">{{ analysis.model_metrics.mean_absolute_error }}</h3>
+                                    <small>MAE (руб.)</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-info mb-3">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Кросс-валидация</h6>
+                                    <h3 class="card-text">{{ analysis.model_metrics.cross_val_mean }}</h3>
+                                    <small>Средний R²</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card text-white bg-warning mb-3">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">Обучено на</h6>
+                                    <h3 class="card-text">{{ analysis.tree_parameters.n_samples_train }}</h3>
+                                    <small>вакансиях</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Визуализация дерева решений</h5>
+                </div>
+                <div class="card-body">
+                    <img src="data:image/png;base64,{{ analysis.decision_tree_plot }}"
+                         alt="Дерево решений"
+                         class="img-fluid rounded">
+                    <p class="text-muted small mt-2">
+                        <strong>Пояснение:</strong> Дерево решений для прогнозирования зарплаты на основе опыта, образования и платформы.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Производительность модели</h5>
+                </div>
+                <div class="card-body">
+                    <img src="data:image/png;base64,{{ analysis.performance_plot }}"
+                         alt="Производительность модели"
+                         class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Примеры предсказаний</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Опыт</th>
+                                    <th>Образование</th>
+                                    <th>Платформа</th>
+                                    <th>Фактическая зарплата</th>
+                                    <th>Предсказанная зарплата</th>
+                                    <th>Ошибка</th>
+                                    <th>Точность</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in analysis.sample_predictions %}
+                                <tr>
+                                    <td>{{ pred.experience }}</td>
+                                    <td>{{ pred.education }}</td>
+                                    <td>{{ pred.platform }}</td>
+                                    <td>{{ pred.actual_salary|floatformat:0 }} ₽</td>
+                                    <td>{{ pred.predicted_salary|floatformat:0 }} ₽</td>
+                                    <td class="{% if pred.error > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        {{ pred.error|floatformat:0 }} ₽
+                                    </td>
+                                    <td>
+                                        {% if pred.error_percent < 10 %}
+                                        <span class="badge bg-success">Высокая</span>
+                                        {% elif pred.error_percent < 20 %}
+                                        <span class="badge bg-warning">Средняя</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Низкая</span>
+                                        {% endif %}
+                                        ({{ pred.error_percent|floatformat:1 }}%)
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="{% url 'statistics' %}" class="btn btn-secondary">
+                ← Вернуться к статистике
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

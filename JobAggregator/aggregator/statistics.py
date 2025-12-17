@@ -4,6 +4,10 @@ import matplotlib
 import pandas as pd
 import seaborn as sns
 import statsmodels.api as sm
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeRegressor, plot_tree
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -472,13 +476,9 @@ class AdvancedAnalyzer:
             return {'error': 'Недостаточно данных для корреляционного анализа. Минимум 10 записей.'}
 
         corr_matrix = self.data[['salary', 'experience', 'education', 'platform']].corr()
-
-
         fig, ax = plt.subplots(figsize=(10, 8))
-
         sns.heatmap(corr_matrix, annot=True, fmt='.3f', cmap='coolwarm', center=0, square=True,
                     ax=ax, cbar_kws={"shrink": 0.8}, linewidths=1, linecolor='white')
-
         ax.set_title('Матрица корреляций', fontsize=16, fontweight='bold', pad=20)
 
         labels = ['Зарплата', 'Опыт работы', 'Образование', 'Платформа']
@@ -500,16 +500,10 @@ class AdvancedAnalyzer:
                 salary_correlations[factor] = {
                     'correlation': correlation,
                     'strength': self.get_correlation_strength(abs(correlation)),
-                    'direction': 'положительная' if correlation > 0 else 'отрицательная'
-                }
+                    'direction': 'положительная' if correlation > 0 else 'отрицательная'}
 
         results = {
-            'correlation_plot': correlation_plot,
-            'correlation_matrix': corr_matrix.to_dict(),
-            'salary_correlations': salary_correlations,
-            'data_count': len(self.data)
-        }
-
+            'correlation_plot': correlation_plot, 'correlation_matrix': corr_matrix.to_dict(), 'salary_correlations': salary_correlations,'data_count': len(self.data)}
         return results
 
     def get_correlation_strength(self, r_value):
@@ -634,3 +628,183 @@ class AdvancedAnalyzer:
         }
 
         return results
+
+    def analyze_decision_tree(self, max_depth=5, min_samples_split=10, min_samples_leaf=5):
+
+        X = self.data[['experience', 'education', 'platform']]
+        y = self.data['salary']
+
+
+        le = LabelEncoder()
+        X_encoded = X.copy()
+
+
+        X_encoded['experience_text'] = self.data['experience_text']
+        X_encoded['education_text'] = self.data['education_text']
+        X_encoded['platform_text'] = self.data['platform_text']
+
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, random_state=42
+        )
+
+        tree_regressor = DecisionTreeRegressor(
+            max_depth=max_depth,
+            min_samples_split=min_samples_split,
+            min_samples_leaf=min_samples_leaf,
+            random_state=42
+        )
+
+        tree_regressor.fit(X_train, y_train)
+
+        y_pred = tree_regressor.predict(X_test)
+
+        mse = mean_squared_error(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+
+        cv_scores = cross_val_score(tree_regressor, X, y, cv=5, scoring='r2')
+        cv_mean = cv_scores.mean()
+        cv_std = cv_scores.std()
+
+        feature_importance = pd.DataFrame({
+            'feature': X.columns,
+            'importance': tree_regressor.feature_importances_
+        }).sort_values('importance', ascending=False)
+
+        plt.figure(figsize=(20, 10))
+        plot_tree(
+            tree_regressor,
+            feature_names=['Опыт (годы)', 'Образование (уровень)', 'Платформа (код)'],
+            filled=True,
+            rounded=True,
+            fontsize=10,
+            max_depth=3,
+            proportion=True
+        )
+        plt.title(f'Дерево решений для прогнозирования зарплаты\nМаксимальная глубина: {max_depth}',
+                  fontsize=16, fontweight='bold', pad=20)
+
+
+        buffer_tree = io.BytesIO()
+        plt.savefig(buffer_tree, format='png', dpi=150, bbox_inches='tight')
+        buffer_tree.seek(0)
+        tree_image = base64.b64encode(buffer_tree.getvalue()).decode('utf-8')
+        buffer_tree.close()
+        plt.close()
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.barh(feature_importance['feature'], feature_importance['importance'])
+        plt.xlabel('Важность признака', fontsize=12)
+        plt.title('Важность признаков в дереве решений', fontsize=14, fontweight='bold')
+        for i, (bar, importance) in enumerate(zip(bars, feature_importance['importance'])):
+            plt.text(importance + 0.01, bar.get_y() + bar.get_height() / 2,
+                     f'{importance:.3f}',
+                     va='center', fontsize=10)
+
+        plt.gca().invert_yaxis()
+        plt.grid(True, alpha=0.3, axis='x')
+        plt.tight_layout()
+
+        buffer_importance = io.BytesIO()
+        plt.savefig(buffer_importance, format='png', dpi=120, bbox_inches='tight')
+        buffer_importance.seek(0)
+        importance_image = base64.b64encode(buffer_importance.getvalue()).decode('utf-8')
+        buffer_importance.close()
+        plt.close()
+
+        plt.figure(figsize=(10, 8))
+
+        plt.subplot(2, 1, 1)
+        plt.scatter(y_test, y_pred, alpha=0.6, edgecolors='w', linewidth=0.5)
+        plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()],
+                 'r--', lw=2, label='Идеальная предсказательная линия')
+        plt.xlabel('Фактическая зарплата (руб.)', fontsize=12)
+        plt.ylabel('Предсказанная зарплата (руб.)', fontsize=12)
+        plt.title(f'Предсказание зарплаты деревом решений\nR² = {r2:.3f}, MAE = {mae:.0f} руб.',
+                  fontsize=14, fontweight='bold')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+
+        plt.subplot(2, 1, 2)
+        errors = y_test - y_pred
+        plt.hist(errors, bins=30, edgecolor='black', alpha=0.7)
+        plt.xlabel('Ошибка предсказания (руб.)', fontsize=12)
+        plt.ylabel('Частота', fontsize=12)
+        plt.title('Распределение ошибок предсказания', fontsize=14, fontweight='bold')
+        plt.axvline(x=0, color='r', linestyle='--', label='Нулевая ошибка')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+
+        plt.tight_layout()
+
+        buffer_performance = io.BytesIO()
+        plt.savefig(buffer_performance, format='png', dpi=120, bbox_inches='tight')
+        buffer_performance.seek(0)
+        performance_image = base64.b64encode(buffer_performance.getvalue()).decode('utf-8')
+        buffer_performance.close()
+        plt.close()
+
+        sample_predictions = []
+        sample_indices = np.random.choice(range(len(X_test)), min(5, len(X_test)), replace=False)
+
+        for idx in sample_indices:
+            actual = y_test.iloc[idx]
+            predicted = y_pred[idx]
+            error = actual - predicted
+
+
+            exp_text = self.data.loc[y_test.index[idx], 'experience_text']
+            edu_text = self.data.loc[y_test.index[idx], 'education_text']
+            plat_text = self.data.loc[y_test.index[idx], 'platform_text']
+
+            sample_predictions.append({
+                'experience': exp_text,
+                'education': edu_text,
+                'platform': plat_text,
+                'actual_salary': int(actual),
+                'predicted_salary': int(predicted),
+                'error': int(error),
+                'error_percent': abs(error / actual * 100) if actual > 0 else 0
+            })
+
+
+        results = {
+            'decision_tree_plot': tree_image,
+            'feature_importance_plot': importance_image,
+            'performance_plot': performance_image,
+            'model_metrics': {
+                'r_squared': round(r2, 4),
+                'adjusted_r_squared': None,
+                'mean_squared_error': round(mse, 2),
+                'mean_absolute_error': round(mae, 2),
+                'cross_val_mean': round(cv_mean, 4),
+                'cross_val_std': round(cv_std, 4)
+            },
+
+            'sample_predictions': sample_predictions,
+
+            'tree_parameters': {
+                'max_depth': max_depth,
+                'min_samples_split': min_samples_split,
+                'min_samples_leaf': min_samples_leaf,
+                'n_samples_train': len(X_train),
+                'n_samples_test': len(X_test),
+                'total_samples': len(self.data)
+            },
+        }
+
+        return results
+
+
+
+    def get_feature_name(self, feature_code):
+        feature_map = {
+            'experience': 'Опыт работы',
+            'education': 'Образование',
+            'platform': 'Платформа',
+            'experience_text': 'Опыт (текст)',
+            'education_text': 'Образование (текст)',
+            'platform_text': 'Платформа (текст)'
+        }
+        return feature_map.get(feature_code, feature_code)
